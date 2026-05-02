@@ -7,6 +7,7 @@ HEADERS = {
     "Access-Control-Allow-Headers": "Content-Type",
 }
 
+
 def handler(event, context):
     product_id = (event.get("pathParameters") or {}).get("productId")
     product = next((p for p in PRODUCTS if p["id"] == product_id), None)

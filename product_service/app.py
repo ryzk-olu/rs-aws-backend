@@ -7,7 +7,6 @@ from product_service.product_service_stack import ProductServiceStack
 
 
 app = cdk.App()
-ProductServiceStack(app, "ProductServiceStack",
-    )
+ProductServiceStack(app, "ProductServiceStack")
 
 app.synth()

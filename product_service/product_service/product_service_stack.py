@@ -13,14 +13,14 @@ class ProductServiceStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         products_table = dynamodb.Table(self, 'ProductsTable',
-            table_name='products',
+            table_name='ryzk_products',
             partition_key=dynamodb.Attribute(name='id', type=dynamodb.AttributeType.STRING),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             removal_policy=RemovalPolicy.DESTROY,
         )
     
         stocks_table = dynamodb.Table(self, 'StocksTable',
-            table_name='stocks',
+            table_name='ryzk_stocks',
             partition_key=dynamodb.Attribute(name='product_id', type=dynamodb.AttributeType.STRING),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             removal_policy=RemovalPolicy.DESTROY,
@@ -33,7 +33,7 @@ class ProductServiceStack(Stack):
 
         get_products_list = _lambda.Function(
             self, "GetProductsListFn",
-            function_name="getProductsList",
+            function_name="ryzk_getProductsList",
             runtime=_lambda.Runtime.PYTHON_3_12,
             code=_lambda.Code.from_asset("lambda"),
             handler="get_products_list.handler",
@@ -42,7 +42,7 @@ class ProductServiceStack(Stack):
 
         get_products_by_id = _lambda.Function(
             self, "GetProductsByIdFn",
-            function_name="getProductsById",
+            function_name="ryzk_getProductsById",
             runtime=_lambda.Runtime.PYTHON_3_12,
             code=_lambda.Code.from_asset("lambda"),
             handler="get_products_by_id.handler",
@@ -50,7 +50,7 @@ class ProductServiceStack(Stack):
         )
 
         create_product = _lambda.Function(self, 'CreateProduct',
-            function_name='createProduct',
+            function_name='ryzk_createProduct',
             runtime=_lambda.Runtime.PYTHON_3_12,
             handler='create_product.handler',
             code=_lambda.Code.from_asset('lambda'),
@@ -59,7 +59,7 @@ class ProductServiceStack(Stack):
 
         api = apigw.RestApi(
             self, "ProductsApi",
-            rest_api_name="Products Service",
+            rest_api_name="Ryzk Products Service",
             default_cors_preflight_options=apigw.CorsOptions(
                 allow_origins=apigw.Cors.ALL_ORIGINS,
                 allow_methods=apigw.Cors.ALL_METHODS,

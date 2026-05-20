@@ -18,7 +18,7 @@ class ImportServiceStack(Stack):
 
         bucket = s3.Bucket(
             self, "ImportBucket",
-            bucket_name="rs-aws-import-bucket-i231nlj40ekemalezxp",  
+            bucket_name="ryzk-rs-aws-import-bucket-i231nljemalezxp",  
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True,
             cors=[
@@ -32,7 +32,7 @@ class ImportServiceStack(Stack):
 
         import_products_file = _lambda.Function(
             self, "ImportProductsFileFn",
-            function_name="importProductsFile",
+            function_name="ryzk_importProductsFile",
             runtime=_lambda.Runtime.PYTHON_3_12,
             code=_lambda.Code.from_asset("lambda"),
             handler="import_products_file.handler",
@@ -47,7 +47,7 @@ class ImportServiceStack(Stack):
 
         import_file_parser = _lambda.Function(
             self, "ImportFileParserFn",
-            function_name="importFileParser",
+            function_name="ryzk_importFileParser",
             runtime=_lambda.Runtime.PYTHON_3_12,
             code=_lambda.Code.from_asset("lambda"),
             handler="import_file_parser.handler",
@@ -70,7 +70,7 @@ class ImportServiceStack(Stack):
 
         api = apigw.RestApi(
             self, "ImportApi",
-            rest_api_name="Import Service",
+            rest_api_name="Ryzk Import Service",
             default_cors_preflight_options=apigw.CorsOptions(
                 allow_origins=apigw.Cors.ALL_ORIGINS,
                 allow_methods=apigw.Cors.ALL_METHODS,

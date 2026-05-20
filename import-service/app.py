@@ -7,7 +7,7 @@ from import_service.import_service_stack import ImportServiceStack
 
 
 app = cdk.App()
-ImportServiceStack(app, "ImportServiceStack",
+ImportServiceStack(app, "RyzkImportServiceStack",
     )
 
 app.synth()

@@ -1,3 +1,4 @@
+import json
 from decimal import Decimal
 
 class DecimalEncoder(json.JSONEncoder):

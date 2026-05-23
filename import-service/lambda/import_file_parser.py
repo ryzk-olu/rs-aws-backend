@@ -1,14 +1,16 @@
 import os
 import csv
 import io
+import json
 import boto3
 from urllib.parse import unquote_plus
 
 s3_client = boto3.client("s3")
+sqs_client = boto3.client("sqs")
 
-BUCKET_NAME = os.environ["BUCKET_NAME"]
 UPLOAD_FOLDER = os.environ["UPLOAD_FOLDER"]
 PARSED_FOLDER = os.environ["PARSED_FOLDER"]
+SQS_QUEUE_URL = os.environ["SQS_QUEUE_URL"]
 
 
 def handler(event, context):
@@ -17,7 +19,6 @@ def handler(event, context):
     for record in event.get("Records", []):
         bucket = record["s3"]["bucket"]["name"]
         key = unquote_plus(record["s3"]["object"]["key"])
-
         print(f"Processing file: s3://{bucket}/{key}")
 
         response = s3_client.get_object(Bucket=bucket, Key=key)
@@ -26,11 +27,17 @@ def handler(event, context):
         text_stream = io.TextIOWrapper(body, encoding="utf-8")
         reader = csv.DictReader(text_stream)
 
+        record_count = 0
         for row in reader:
-            print(f"Parsed record: {row}")
+            sqs_client.send_message(
+                QueueUrl=SQS_QUEUE_URL,
+                MessageBody=json.dumps(row),
+            )
+            record_count += 1
+
+        print(f"Sent {record_count} records to SQS")
 
         new_key = key.replace(f"{UPLOAD_FOLDER}/", f"{PARSED_FOLDER}/", 1)
-
         s3_client.copy_object(
             Bucket=bucket,
             CopySource={"Bucket": bucket, "Key": key},

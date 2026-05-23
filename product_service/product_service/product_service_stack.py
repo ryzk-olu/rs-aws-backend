@@ -47,7 +47,7 @@ class ProductServiceStack(Stack):
 
         create_product_topic.add_subscription(
             subscriptions.EmailSubscription(
-                "olga.ryzhkova.v@gmail.com",
+                "olga.ryzhkova.v+expensive@gmail.com",
                 filter_policy={
                     "price": sns.SubscriptionFilter.numeric_filter(
                         greater_than_or_equal_to=100

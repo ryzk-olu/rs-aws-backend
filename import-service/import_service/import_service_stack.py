@@ -3,11 +3,12 @@ from aws_cdk import (
     CfnOutput,
     Duration,
     RemovalPolicy,
+    Fn,
     aws_lambda as _lambda,
     aws_apigateway as apigw,
     aws_s3 as s3,
     aws_s3_notifications as s3n,
-    aws_iam as iam,
+    aws_sqs as sqs,
 )
 from constructs import Construct
 
@@ -18,7 +19,7 @@ class ImportServiceStack(Stack):
 
         bucket = s3.Bucket(
             self, "ImportBucket",
-            bucket_name="ryzk-rs-aws-import-bucket-i231nljemalezxp",  
+            bucket_name="ryzk-rs-aws-import-bucket-i231nljemalezxp",
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True,
             cors=[
@@ -28,6 +29,11 @@ class ImportServiceStack(Stack):
                     allowed_headers=["*"],
                 )
             ],
+        )
+
+        catalog_items_queue = sqs.Queue.from_queue_arn(
+            self, "ImportedCatalogQueue",
+            queue_arn=Fn.import_value("RyzkCatalogItemsQueueArn"),
         )
 
         import_products_file = _lambda.Function(
@@ -42,7 +48,6 @@ class ImportServiceStack(Stack):
                 "UPLOAD_FOLDER": "uploaded",
             },
         )
-
         bucket.grant_put(import_products_file)
 
         import_file_parser = _lambda.Function(
@@ -56,11 +61,12 @@ class ImportServiceStack(Stack):
                 "BUCKET_NAME": bucket.bucket_name,
                 "UPLOAD_FOLDER": "uploaded",
                 "PARSED_FOLDER": "parsed",
+                "SQS_QUEUE_URL": catalog_items_queue.queue_url,
             },
         )
-
         bucket.grant_read_write(import_file_parser)
         bucket.grant_delete(import_file_parser)
+        catalog_items_queue.grant_send_messages(import_file_parser)
 
         bucket.add_event_notification(
             s3.EventType.OBJECT_CREATED,

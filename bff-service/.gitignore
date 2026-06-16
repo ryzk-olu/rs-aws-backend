@@ -1,0 +1,17 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+
+# Environment secrets
+.env
+
+# CDK output
+cdk.out
+
+# Logs
+*.log
+
+# OS files
+.DS_Store

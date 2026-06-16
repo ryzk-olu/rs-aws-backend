@@ -47,6 +47,8 @@ const SERVICES = {
     product: process.env.PRODUCT_SERVICE_URL || '',
     cart: process.env.CART_SERVICE_URL || '',
 };
+let productCache = null;
+const CACHE_TTL = 2 * 60 * 1000;
 app.all('/:service/*', async (request, reply) => {
     const { service } = request.params;
     const recipientURL = SERVICES[service];
@@ -55,7 +57,17 @@ app.all('/:service/*', async (request, reply) => {
     }
     const path = request.url.replace(`/${service}`, '');
     const targetUrl = `${recipientURL}${path}`;
-    return new Promise((resolve, reject) => {
+    const isProductsList = service === 'product' &&
+        path.startsWith('/products') &&
+        request.method === 'GET';
+    if (isProductsList && productCache) {
+        const age = Date.now() - productCache.timestamp;
+        if (age < CACHE_TTL) {
+            reply.header('X-Cache', 'HIT');
+            return reply.status(200).send(productCache.data);
+        }
+    }
+    return new Promise((resolve) => {
         const url = new URL(targetUrl);
         const lib = url.protocol === 'https:' ? https : http;
         const options = {
@@ -71,11 +83,15 @@ app.all('/:service/*', async (request, reply) => {
             let data = '';
             proxyRes.on('data', (chunk) => (data += chunk));
             proxyRes.on('end', () => {
+                if (isProductsList && proxyRes.statusCode === 200) {
+                    productCache = { data, timestamp: Date.now() };
+                }
                 reply.status(proxyRes.statusCode || 200);
                 Object.entries(proxyRes.headers).forEach(([key, value]) => {
                     if (value)
                         reply.header(key, value);
                 });
+                reply.header('X-Cache', 'MISS');
                 reply.send(data);
                 resolve(null);
             });

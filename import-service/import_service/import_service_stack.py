@@ -9,9 +9,9 @@ from aws_cdk import (
     aws_s3 as s3,
     aws_s3_notifications as s3n,
     aws_sqs as sqs,
+    aws_iam as iam,
 )
 from constructs import Construct
-
 
 class ImportServiceStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs):
@@ -74,6 +74,17 @@ class ImportServiceStack(Stack):
             s3.NotificationKeyFilter(prefix="uploaded/"),
         )
 
+        basic_authorizer = _lambda.Function.from_function_attributes(
+            self, "BasicAuthorizerFn",
+            function_arn="arn:aws:lambda:us-east-1:501421114631:function:ryzk_basicAuthorizer",
+            same_environment=True,
+        )
+
+        authorizer = apigw.TokenAuthorizer(
+            self, "BasicAuthorizer",
+            handler=basic_authorizer,
+        )
+
         api = apigw.RestApi(
             self, "ImportApi",
             rest_api_name="Ryzk Import Service",
@@ -90,6 +101,8 @@ class ImportServiceStack(Stack):
             request_parameters={
                 "method.request.querystring.name": True,
             },
+            authorizer=authorizer,
+            authorization_type=apigw.AuthorizationType.CUSTOM,
         )
 
         CfnOutput(self, "ImportApiUrl", value=api.url)
